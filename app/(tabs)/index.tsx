@@ -11,18 +11,20 @@ import {
   Animated,
   Easing,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
-// Optional: Uncomment below if you want TTS
-// import * as Speech from 'expo-speech';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SafeZone() {
   const [location, setLocation] = useState(null);
   const [showWebView, setShowWebView] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isCounting, setIsCounting] = useState(false);
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [storedContact, setStoredContact] = useState('');
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -34,6 +36,11 @@ export default function SafeZone() {
       }
       let loc = await Location.getCurrentPositionAsync({});
       setLocation(loc.coords);
+
+      const savedContact = await AsyncStorage.getItem('emergencyContact');
+      if (savedContact) {
+        setStoredContact(savedContact);
+      }
     })();
   }, []);
 
@@ -44,7 +51,7 @@ export default function SafeZone() {
       animatePulse();
     } else if (isCounting && countdown === 0) {
       setIsCounting(false);
-      makeEmergencyCall('+917093339270');
+      makeEmergencyCall(storedContact);
     }
 
     return () => clearTimeout(timer);
@@ -60,9 +67,24 @@ export default function SafeZone() {
     }).start();
   };
 
+  const saveContact = async () => {
+    if (!emergencyContact) {
+      Alert.alert('Invalid Input', 'Please enter a valid phone number.');
+      return;
+    }
+    await AsyncStorage.setItem('emergencyContact', emergencyContact);
+    setStoredContact(emergencyContact);
+    Alert.alert('Saved', 'Emergency contact saved successfully.');
+  };
+
   const triggerEmergency = async () => {
     if (!location) {
       Alert.alert('Error', 'Location not available.');
+      return;
+    }
+
+    if (!storedContact) {
+      Alert.alert('Missing Contact', 'Please set your emergency contact.');
       return;
     }
 
@@ -74,7 +96,7 @@ export default function SafeZone() {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         await SMS.sendSMSAsync(
-          ['+917093339270'],
+          [storedContact],
           message
         );
 
@@ -82,9 +104,6 @@ export default function SafeZone() {
           'Emergency Triggered',
           'Location shared. Call will be made in 10 seconds.'
         );
-
-        // Optional: Voice Feedback
-        // Speech.speak("Emergency triggered. Location shared. Calling in ten seconds.");
 
         setTimeout(() => {
           setIsCounting(true);
@@ -112,66 +131,65 @@ export default function SafeZone() {
     const message = event.nativeEvent.data.toLowerCase();
     console.log('WebView heard:', message);
 
-    if (message.includes('help') || message.includes('emergency')) {
-      Alert.alert('Voice Detected', 'Emergency keyword detected!');
+    if (message.includes('help') || message.includes('emergency') || message.includes('loud sound')) {
+      Alert.alert('Voice Detected', 'Emergency keyword or loud sound detected!');
       setShowWebView(false);
       triggerEmergency();
     }
   };
 
   const webHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Listening</title>
-</head>
-<body style="font-family:sans-serif;text-align:center;background:#e0f7fa;">
-  <h2>🎙 Say "Help" or "Emergency" or Scream Loudly</h2>
-  <p>🎧 Listening for voice or loud sounds...</p>
-  <script>
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.onresult = function(event) {
-      const transcript = event.results[event.results.length - 1][0].transcript;
-      window.ReactNativeWebView.postMessage(transcript);
-    };
-    recognition.onerror = function(event) {
-      window.ReactNativeWebView.postMessage('error: ' + event.error);
-    };
-    recognition.start();
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listening</title>
+  </head>
+  <body style="font-family:sans-serif;text-align:center;background:#e0f7fa;">
+    <h2>🎙 Say "Help" or "Emergency" or Scream Loudly</h2>
+    <p>🎧 Listening for voice or loud sounds...</p>
+    <script>
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.onresult = function(event) {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        window.ReactNativeWebView.postMessage(transcript);
+      };
+      recognition.onerror = function(event) {
+        window.ReactNativeWebView.postMessage('error: ' + event.error);
+      };
+      recognition.start();
 
-    // Loud Sound Detection
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(stream);
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 512;
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        source.connect(analyser);
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 512;
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          source.connect(analyser);
 
-        function checkVolume() {
-          analyser.getByteFrequencyData(dataArray);
-          let volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-          if (volume > 80) {
-            window.ReactNativeWebView.postMessage('Loud sound detected');
+          function checkVolume() {
+            analyser.getByteFrequencyData(dataArray);
+            let volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            if (volume > 80) {
+              window.ReactNativeWebView.postMessage('Loud sound detected');
+            }
+            requestAnimationFrame(checkVolume);
           }
-          requestAnimationFrame(checkVolume);
-        }
 
-        checkVolume();
-      })
-      .catch(err => {
-        window.ReactNativeWebView.postMessage('mic error: ' + err.message);
-      });
-  </script>
-</body>
-</html>
-`;
+          checkVolume();
+        })
+        .catch(err => {
+          window.ReactNativeWebView.postMessage('mic error: ' + err.message);
+        });
+    </script>
+  </body>
+  </html>
+  `;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -191,6 +209,16 @@ export default function SafeZone() {
           or "emergency", shares your live location via SMS, and makes a call to your emergency contact.
         </Text>
       </View>
+
+      <Text style={{ fontSize: 16, marginTop: 10, fontWeight: 'bold' }}>📞 Emergency Contact</Text>
+      <TextInput
+        placeholder="Enter phone number"
+        keyboardType="phone-pad"
+        value={emergencyContact}
+        onChangeText={setEmergencyContact}
+        style={styles.input}
+      />
+      <Button title="💾 Save Contact" onPress={saveContact} color="#0288d1" />
 
       <View style={styles.buttonContainer}>
         <Button
@@ -321,5 +349,14 @@ const styles = StyleSheet.create({
     top: 40,
     right: 20,
     zIndex: 20,
+  },
+  input: {
+    width: '100%',
+    padding: 12,
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
 });
