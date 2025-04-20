@@ -2,7 +2,7 @@
 
 ## 📥 Download
 
-[Download SafeZone APK (Android)]([https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing](https://expo.dev/accounts/mmtspteam/projects/SafeZoneApp/builds/37736c3a-1369-44d3-bbfc-800dd40057e7))
+Download SafeZone APK (Android)([https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing](https://expo.dev/accounts/mmtspteam/projects/SafeZoneApp/builds/37736c3a-1369-44d3-bbfc-800dd40057e7))
 
 
 **SafeZone** is a React Native emergency response app designed to detect distress and instantly trigger safety protocols. Whether it’s a scream, a loud noise, or a spoken keyword like “help” or “emergency,” SafeZone responds in real-time to keep users safe.
