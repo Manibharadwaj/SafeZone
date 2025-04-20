@@ -1,51 +1,53 @@
-# Welcome to your Expo app 👋
+# 🚨 SafeZone - Emergency Alert App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📥 Download
 
-## Get started
+[Download SafeZone APK (Android)]([https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing](https://expo.dev/accounts/mmtspteam/projects/SafeZoneApp/builds/37736c3a-1369-44d3-bbfc-800dd40057e7))
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+**SafeZone** is a React Native emergency response app designed to detect distress and instantly trigger safety protocols. Whether it’s a scream, a loud noise, or a spoken keyword like “help” or “emergency,” SafeZone responds in real-time to keep users safe.
 
-2. Start the app
+---
 
-   ```bash
-    npx expo start
-   ```
+## ⚙️ Features
 
-In the output, you'll find options to open the app in a
+- 🎤 **Voice Detection (WebView)**  
+  Uses Web Speech API to detect keywords like **"help"** or **"emergency"**.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- 🔊 **Loud Sound Detection**  
+  Leverages the Web Audio API to pick up distress sounds like **screams or claps**.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- 📸 **Auto Photo Capture**  
+  Instantly accesses the camera and takes photos during emergencies.
 
-## Get a fresh project
+- 📱 **Emergency SMS Trigger**  
+  Automatically sends a pre-defined **SMS alert** to emergency contacts.
 
-When you're ready, run:
+- 📞 **Auto Call Trigger**  
+  Can initiate a call to a designated emergency number.
 
-```bash
-npm run reset-project
-```
+- 🚨 **Alarm Playback**  
+  Plays a loud siren or alert sound when distress is detected.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- 🔄 **Background Service**  
+  Continues to monitor for threats even when the app is running in the background.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📲 Tech Stack
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **React Native (with Expo)**
+- **WebView (for audio + speech APIs)**
+- **JavaScript / HTML5 APIs**
+- **Expo Media / Permissions / Notifications**
+- **React Native Camera, SMS, and Linking**
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 📦 Installation
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-"# SafeZone" 
+
+git clone https://github.com/yourusername/safezone-app.git
+cd safezone-app
+npm install
+npx expo start
